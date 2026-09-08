@@ -1,4 +1,4 @@
-# Adult Census Income — High-Income Household Prediction
+# Week 1 Adult Census Income — High-Income Household Prediction
 
 ## Project Objective
 Predict whether a household's annual income exceeds $50K using U.S. Census attributes, so a
