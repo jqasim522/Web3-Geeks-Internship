@@ -1,0 +1,100 @@
+{
+  "generated_at": "2026-09-25T14:06:43.584975",
+  "developers": [
+    {
+      "developer": "Bahria Town",
+      "city_presence": [
+        "Islamabad",
+        "Karachi",
+        "Lahore",
+        "Rawalpindi"
+      ],
+      "project_count_in_seed": 132,
+      "top_projects": [
+        "Bahria Heights 1",
+        "Bahria Town - Precinct 1",
+        "Bahria Town - Sector E",
+        "Bahria Town Phase 3",
+        "Bahria Town Phase 4",
+        "Bahria Town Phase 8",
+        "Bahria Town Phase 8 - Block M",
+        "Bahria Town Phase 8 - Rafi Block"
+      ],
+      "reputation_notes": "Large integrated communities with broad inventory; due diligence on exact sector and handover timelines remains necessary.",
+      "risk_note": "Never present reputation as guarantee; always pair with current legal/compliance and possession checks."
+    },
+    {
+      "developer": "DHA",
+      "city_presence": [
+        "Islamabad",
+        "Karachi",
+        "Lahore"
+      ],
+      "project_count_in_seed": 148,
+      "top_projects": [
+        "Bukhari Commercial Area",
+        "DHA 9 Town",
+        "DHA Defence Phase 2",
+        "DHA Phase 6",
+        "DHA Phase 6 - Block K",
+        "DHA Phase 7",
+        "DHA Phase 7 Extension",
+        "DHA Phase 8"
+      ],
+      "reputation_notes": "Strong end-user demand and resale liquidity; premium pricing but usually better infrastructure consistency.",
+      "risk_note": "Never present reputation as guarantee; always pair with current legal/compliance and possession checks."
+    },
+    {
+      "developer": "Paragon",
+      "city_presence": [
+        "Lahore"
+      ],
+      "project_count_in_seed": 5,
+      "top_projects": [
+        "Paragon City",
+        "Paragon City - Orchard 1 Block"
+      ],
+      "reputation_notes": "Limited sample size in current dataset; rely on updated site-level verification before recommendation.",
+      "risk_note": "Never present reputation as guarantee; always pair with current legal/compliance and possession checks."
+    },
+    {
+      "developer": "Park View",
+      "city_presence": [
+        "Lahore"
+      ],
+      "project_count_in_seed": 17,
+      "top_projects": [
+        "Park View City",
+        "Park View City - Executive Block",
+        "Park View City - Platinum Block",
+        "Park View City - Rose Block",
+        "Park View City - Topaz Extension Block",
+        "Park View City - Tulip Block"
+      ],
+      "reputation_notes": "Growing inventory with installment-focused buyer interest; confirm development pace and utility readiness per block.",
+      "risk_note": "Never present reputation as guarantee; always pair with current legal/compliance and possession checks."
+    },
+    {
+      "developer": "Private / Unknown",
+      "city_presence": [
+        "Islamabad",
+        "Karachi",
+        "Lahore",
+        "Rawalpindi"
+      ],
+      "project_count_in_seed": 273,
+      "top_projects": [
+        "Adiala Road",
+        "Al-Kabir Town - Phase 2",
+        "Askari 5 - Sector J",
+        "Bani Gala",
+        "Bismillah Housing Scheme",
+        "F-10",
+        "Gulistan-e-Jauhar",
+        "Sharfabad"
+      ],
+      "reputation_notes": "Mixed market reputation; verify project-specific approvals and delivery history before commitment.",
+      "risk_note": "Never present reputation as guarantee; always pair with current legal/compliance and possession checks."
+    }
+  ]
+}
