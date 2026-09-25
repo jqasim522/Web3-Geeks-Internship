@@ -1,7 +1,9 @@
-aiohttp==3.12.15
+aiohttp==3.14.3
 chromadb==1.0.20
+# NOTE: No patched ChromaDB release is currently available for listed advisories; use local embedded mode only, single-tenant, no exposed Chroma server endpoint.
 langchain-chroma==0.2.6
-langchain-core==0.3.76
+langchain-core==0.3.85
+# NOTE: Remaining advisory applies to legacy load_prompt APIs; current Day 2 code path does not use dumps/loads/load_prompt surfaces.
 langchain-google-genai==2.1.10
 langchain-groq==0.3.8
 langchain-huggingface==0.3.1
