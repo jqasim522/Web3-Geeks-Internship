@@ -1,0 +1,23 @@
+# Content Research & Blog Draft Agent — dependencies
+# Python >= 3.11 required
+
+# LLM + LangChain
+langchain==0.3.7
+langchain-google-genai==2.0.7
+langchain-community==0.3.7
+langchain-core==0.3.21
+
+# LangGraph (workflow + HITL checkpointing)
+langgraph==0.2.55
+
+# FastAPI
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.1
+
+# Wikipedia external tool
+wikipedia==1.4.0
+
+# Environment / utilities
+python-dotenv==1.0.1
+requests==2.32.3
