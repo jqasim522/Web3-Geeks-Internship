@@ -53,7 +53,6 @@ async def api_text(turn: TextTurn):
         log.exception("api_text failed")
         return JSONResponse({"error": str(e)}, status_code=500)
 
-
 @app.websocket("/ws/voice")
 async def ws_voice(ws: WebSocket):
     await ws.accept()
@@ -62,7 +61,13 @@ async def ws_voice(ws: WebSocket):
     pcm = bytearray()
     try:
         while True:
-            msg = await ws.receive()
+            try:
+                msg = await ws.receive()
+            except Exception:
+                break
+
+            if msg.get("type") == "websocket.disconnect":
+                break
 
             if msg.get("text"):
                 try:
@@ -91,28 +96,34 @@ async def ws_voice(ws: WebSocket):
     except Exception:
         log.exception("ws[%s] crashed", sid)
 
-
 async def _text_turn(ws: WebSocket, user_text: str):
     user_text = (user_text or "").strip()
     if not user_text:
         return
     log.info("turn(text): %r", user_text[:120])
-    reply = await PipelineAdapter.agent_reply(user_text)
-    await ws.send_text(json.dumps({"type": "agent_text", "text": reply}))
-    await _stream_tts(ws, reply)
-
+    chat_text, tts_text = await PipelineAdapter.agent_reply(user_text)
+    await ws.send_text(json.dumps({"type": "agent_text", "text": chat_text}))
+    await _stream_tts(ws, tts_text)
 
 async def _audio_turn(ws: WebSocket, pcm: bytes):
     log.info("turn(audio): %d bytes", len(pcm))
-    transcript = await PipelineAdapter.transcribe(pcm)
+    if not pcm:
+        await ws.send_text(json.dumps({"type": "audio_end"}))
+        return
+    try:
+        transcript = await PipelineAdapter.transcribe_pcm(pcm)
+    except Exception:
+        log.exception("stt failed")
+        await ws.send_text(json.dumps({"type": "error", "message": "stt failed"}))
+        await ws.send_text(json.dumps({"type": "audio_end"}))
+        return
     await ws.send_text(json.dumps({"type": "transcript", "text": transcript, "final": True}))
     if not transcript.strip():
         await ws.send_text(json.dumps({"type": "audio_end"}))
         return
-    reply = await PipelineAdapter.agent_reply(transcript)
-    await ws.send_text(json.dumps({"type": "agent_text", "text": reply}))
-    await _stream_tts(ws, reply)
-
+    chat_text, tts_text = await PipelineAdapter.agent_reply(transcript)
+    await ws.send_text(json.dumps({"type": "agent_text", "text": chat_text}))
+    await _stream_tts(ws, tts_text)
 
 async def _stream_tts(ws: WebSocket, agent_text: str):
     n = 0
