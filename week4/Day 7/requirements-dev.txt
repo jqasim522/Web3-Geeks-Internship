@@ -1,0 +1,18 @@
+# Day 6 — Test dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+hypothesis>=6.100.0
+
+# Core runtime (needed even for offline tests)
+langgraph>=1.2.0
+langchain-core>=0.3.0
+langchain-groq>=0.1.0
+
+# Optional (live tests only)
+# langchain-google-genai
+# google-api-python-client
+# google-auth-httplib2
+# google-auth-oauthlib
+# python-dotenv
+# tenacity
