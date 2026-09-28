@@ -77,10 +77,20 @@ class CalendarClient:
     @staticmethod
     def _ensure_aware(dt: datetime) -> datetime:
         """Google Calendar requires timezone-aware datetimes.
-        If naive, attach UTC. If aware, leave as-is."""
+        A naive datetime from the user (e.g. parsed from '2026-10-25 15:00')
+        MUST be interpreted as LOCAL time, not UTC — otherwise 3 PM gets
+        stored as 3 PM UTC and displays as 8 PM in Pakistan.
+        If already aware, leave as-is."""
         if dt.tzinfo is None:
-            logger.debug("datetime_was_naive -> assuming UTC: %s", dt)
-            return dt.replace(tzinfo=timezone.utc)
+            try:
+                from zoneinfo import ZoneInfo
+                local = ZoneInfo(_LOCAL_TZ)
+            except Exception:
+                # Fallback: fixed +05:00 for Pakistan (no DST since 2009)
+                from datetime import timedelta
+                local = timezone(timedelta(hours=5))
+            logger.debug("datetime_was_naive -> attaching %s: %s", _LOCAL_TZ, dt)
+            return dt.replace(tzinfo=local)
         return dt
 
     @classmethod
@@ -203,3 +213,59 @@ class CalendarClient:
         await asyncio.to_thread(_call)
         await asyncio.sleep(1.0)
         logger.info("calendar_client.cancel_event -> deleted %s", event_id)
+
+    async def update_event(
+        self,
+        event_id: str,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+        summary: Optional[str] = None,
+        description: Optional[str] = None,
+        attendee_email: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Patches an existing event. Any arg left None is not changed.
+
+        Google Calendar requires start+end together when changing times, so if
+        only one is given we raise rather than sending a malformed patch.
+        """
+        if (start is None) != (end is None):
+            raise ValueError("update_event: pass both start and end, or neither")
+
+        logger.info("calendar_client.update_event id=%s start=%s end=%s",
+                    event_id, start, end)
+        service = await self._get_service()
+
+        patch: Dict[str, Any] = {}
+        if start is not None and end is not None:
+            start = self._ensure_aware(start)
+            end = self._ensure_aware(end)
+            patch["start"] = {"dateTime": self._rfc3339(start), "timeZone": _LOCAL_TZ}
+            patch["end"] = {"dateTime": self._rfc3339(end), "timeZone": _LOCAL_TZ}
+        if summary is not None:
+            patch["summary"] = summary
+        if description is not None:
+            patch["description"] = description
+        if attendee_email is not None:
+            patch["attendees"] = [{"email": attendee_email}]
+
+        if not patch:
+            raise ValueError("update_event: nothing to update")
+
+        @_retryable_google_call()
+        def _call():
+            logger.debug("update_event_patch %s", patch)
+            return (
+                service.events()
+                .patch(
+                    calendarId=self.calendar_id,
+                    eventId=event_id,
+                    body=patch,
+                    sendUpdates="all" if attendee_email else "none",
+                )
+                .execute()
+            )
+
+        event = await asyncio.to_thread(_call)
+        await asyncio.sleep(1.0)
+        logger.info("calendar_client.update_event -> id=%s", event.get("id"))
+        return event

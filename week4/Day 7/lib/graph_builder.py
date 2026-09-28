@@ -50,12 +50,14 @@ from lib import rag_lib as r
 from lib.graph_nodes import (
     GraphDeps,
     booking_node,
+    cancel_booking_node,
     classify_intent_node,
     confirm_booking_node,
     error_node,
     greeting_node,
     price_node,
     refusal_node,
+    reschedule_booking_node,
     response_render_node,
     retrieval_node,
 )
@@ -74,9 +76,16 @@ def build_default_deps(booker: Optional[SiteVisitBooker] = None) -> GraphDeps:
     place per process that should build the index — it's not cheap, so
     scripts/run_langgraph_call.py and eval_graph.py both call this once, not per
     turn."""
+    booker = booker or SiteVisitBooker()
+    from lib.booking_store import BookingStore
+    booking_store = BookingStore()
     index_holder: Dict[str, Any] = {"index": r.TfidfIndex(r.load_documents())}
     registry = build_tool_registry(index_holder, booker=booker)
-    return GraphDeps(tool_registry=registry, fallback_llm=FallbackLLM())
+    return GraphDeps(
+        tool_registry=registry,
+        booking_store=booking_store,
+        calendar_client=booker.calendar,
+    )
 
 
 def _route_after_classify(state: Dict[str, Any]) -> str:
@@ -113,6 +122,8 @@ def build_graph(deps: Optional[GraphDeps] = None, checkpointer: Optional[Any] = 
     g.add_node("price_node", bind(price_node))
     g.add_node("booking_node", bind(booking_node))
     g.add_node("confirm_booking_node", bind(confirm_booking_node))
+    g.add_node("cancel_booking_node", bind(cancel_booking_node))
+    g.add_node("reschedule_booking_node", bind(reschedule_booking_node))
     g.add_node("response_render_node", bind(response_render_node))
     g.add_node("error_node", bind(error_node))
 
@@ -126,10 +137,14 @@ def build_graph(deps: Optional[GraphDeps] = None, checkpointer: Optional[Any] = 
             "search": "retrieval_node",
             "price": "price_node",
             "book": "booking_node",
+            "cancel": "cancel_booking_node",
+            "reschedule": "reschedule_booking_node",
             "error": "error_node",
         },
     )
     g.add_edge("retrieval_node", "response_render_node")
+    g.add_edge("cancel_booking_node", "response_render_node")
+    g.add_edge("reschedule_booking_node", "response_render_node")
     g.add_edge("price_node", "response_render_node")
     g.add_edge("greeting_node", "response_render_node")
     g.add_edge("refusal_node", "response_render_node")
