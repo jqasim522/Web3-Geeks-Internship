@@ -3,7 +3,7 @@
 **Intern:** Qasim Javed
 **Program:** Web3 Geeks Summer Batch 2026
 **Track:** AI Engineering
-**Duration:** 4 weeks (Aug – Sep 2026)
+**Duration:** 4 weeks ( Sep - Oct 2026)
 **Status:** ✅ Complete — All four weeks delivered, capstone shipped
 
 ---
