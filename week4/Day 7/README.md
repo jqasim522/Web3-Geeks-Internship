@@ -259,7 +259,7 @@ Adversarial coverage report: `docs/day6_security_report.md`.
 ## Project layout
 
 ```
-day6/
+Day 7/
 ├── adapter.py                 # Shared integration layer (Streamlit + FastAPI)
 ├── server.py                  # FastAPI app — WebSocket + REST + /health
 ├── streamlit_app.py           # Demo UI
