@@ -1,0 +1,55 @@
+# deploy/systemd/voice-agent.service
+#
+# STATUS: CODE-COMPLETE | USER DEPLOYS
+# TARGET: Ubuntu 22.04+, systemd 249+
+# RUN ON USER MACHINE (alternative to Docker — pick one deployment method,
+#         not both):
+#   sudo useradd --system --no-create-home --shell /usr/sbin/nologin voiceagent
+#   sudo mkdir -p /opt/voice-agent /etc/voice-agent
+#   sudo cp -r lib scripts data /opt/voice-agent/
+#   sudo cp deploy/.env.example /etc/voice-agent/.env   # then edit with real values
+#   sudo chown -R voiceagent:voiceagent /opt/voice-agent /etc/voice-agent
+#   sudo chmod 600 /etc/voice-agent/.env
+#   sudo cp deploy/systemd/voice-agent.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now voice-agent
+# EXPECTED: `systemctl status voice-agent` shows "active (running)". Never
+#           run in this environment — verify on the real server, and check
+#           `journalctl -u voice-agent -f` for startup errors before
+#           trusting this file.
+#
+# ASSUMPTION FLAGGED: assumes a Python virtualenv at /opt/voice-agent/venv
+# and the same lib.server:app entrypoint assumed in deploy/Dockerfile. Adjust
+# ExecStart if your real entrypoint differs, and create the venv yourself:
+#   cd /opt/voice-agent && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt
+
+[Unit]
+Description=Pakistani Real Estate Voice Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=voiceagent
+Group=voiceagent
+WorkingDirectory=/opt/voice-agent
+EnvironmentFile=/etc/voice-agent/.env
+ExecStart=/opt/voice-agent/venv/bin/uvicorn lib.server:app --host 0.0.0.0 --port 8000 --workers 2
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# Journal logging — view with: journalctl -u voice-agent -f
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=voice-agent
+
+# Hardening (safe defaults for a non-root, no-home service user)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/voice-agent/data /opt/voice-agent/logs
+
+[Install]
+WantedBy=multi-user.target

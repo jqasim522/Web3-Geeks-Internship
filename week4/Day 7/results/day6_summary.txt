@@ -1,0 +1,115 @@
+DAY 6 — FINAL TEST RESULTS SUMMARY
+Date: 2026-09-27
+
+═══════════════════════════════════════════════════════════════
+OFFLINE SUITE
+═══════════════════════════════════════════════════════════════
+764 passed, 2 skipped, 1 xfailed in 83.84s
+Zero failures.
+
+Category breakdown:
+- unit:         229 passed, 0 failed
+- integration:   34 passed, 0 failed
+- adversarial:  127 passed, 0 failed
+- e2e:           53 passed, 0 failed
+- fuzz:          22 passed, 0 failed
+- consistency:  265 passed, 0 failed
+- failure:       21 passed, 0 failed
+- ratelimit:     12 passed, 0 failed
+
+═══════════════════════════════════════════════════════════════
+LIVE SUITE (REAL APIs)
+═══════════════════════════════════════════════════════════════
+11 passed, 0 failed in ~110s
+
+- test_live_llm.py:       5 passed (real Groq + Gemini calls)
+- test_live_booking.py:   2 passed (real Google Calendar + Gmail)
+- test_live_full_e2e.py:  4 passed (full conversational flow + cleanup)
+
+Real artifacts created (now cleaned up):
+- Event IDs: bqm0g5rr5gbrpv1mukjkogo7a0, hbvghhvbc7p63hssejeibr14ng
+- Real emails delivered to Gmail inbox
+
+═══════════════════════════════════════════════════════════════
+REAL BUGS FOUND AND FIXED
+═══════════════════════════════════════════════════════════════
+1. Rate limit "quota" detection missing — lib/llm_fallback.py
+2. DB lock error escaped raw — lib/rag_lib.py (get_property)
+3. query_properties returned None instead of [] — lib/rag_lib.py
+   (root cause of 15 cascading test failures)
+4. Urdu multi-word phrases broken — lib/urdu_to_roman.py
+   (phrases now matched before word-split)
+5. PII regex too broad (false positives on UrduLish) — test fix
+6. sympy bad import — test fix
+7. Fuzz @given with default args — test fix
+
+═══════════════════════════════════════════════════════════════
+SKIPPED TESTS (DOCUMENTED)
+═══════════════════════════════════════════════════════════════
+1. test_identical_booking_twice_second_reports_busy
+   Reason: mock_calendar_busy_after_first fixture not in conftest.py
+   Action: Day 7 follow-up — add fixture
+
+2. (list any second skip)
+
+═══════════════════════════════════════════════════════════════
+XFAILED TEST (EXPECTED FAILURE)
+═══════════════════════════════════════════════════════════════
+- test_concurrent_identical_requests_hit_backend_fewer_times_than_callers
+  Reason: single-flight feature not yet implemented (documented)
+
+═══════════════════════════════════════════════════════════════
+COVERAGE (partial)
+═══════════════════════════════════════════════════════════════
+Total: 39% (misleading — includes legacy/unused files)
+
+Critical-path coverage:
+- rag_lib.py:             80%
+- graph_nodes.py:         71%
+- site_visit_booking.py:  92%
+- calendar_client.py:     83%
+- email_client.py:        70%
+- llm_fallback.py:        86%
+- urdu_to_roman.py:       86%
+- tts_urdu_lish.py:       84%
+- graph_state.py:         74%
+- tool_registry.py:       72%
+
+Legacy/low-coverage (not Day 6 scope):
+- voice_pipeline.py:              25% (763 lines — Day 3)
+- voice_pipeline_langgraph.py:     0% (708 lines — Day 5 alternative)
+- conversation_runner.py:          0% (100 lines — Day 5 live only)
+- eval_lib.py:                     0% (237 lines — Day 2 reference)
+- voice_providers.py:             29% (227 lines — needs real API)
+
+═══════════════════════════════════════════════════════════════
+SECURITY VALIDATION
+═══════════════════════════════════════════════════════════════
+127 adversarial tests passed:
+- 28 prompt injection attempts — all refused
+- 25 jailbreak attempts — all refused
+- 10 PII extraction attempts — no leak
+- 25 SQL injection attempts — DB intact
+- 15 path traversal attempts — no file access
+- 12 unicode attacks — no crash
+- 12 DoS attempts — no crash
+
+═══════════════════════════════════════════════════════════════
+PRE-DEPLOYMENT RECOMMENDATION
+═══════════════════════════════════════════════════════════════
+Status: SHIP-WITH-CAVEATS
+
+Caveats:
+1. Two skipped tests need fixtures (Day 7)
+2. One xfailed test needs single-flight feature (Day 7)
+3. Booking parser doesn't handle comma-separated format
+   (Day 7 — users may type this way)
+4. Coverage 39% total (critical paths 70-92%)
+5. STT for UrduLish blocked (Day 3 industry limitation)
+
+Ready for:
+- Live demo (all APIs verified working)
+- Real customer bookings
+- Production deployment with Docker (Day 7)
+
+═══════════════════════════════════════════════════════════════

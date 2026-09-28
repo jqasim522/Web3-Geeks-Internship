@@ -1,0 +1,11 @@
+faq_id,category,question,answer
+FAQ-01,coverage,Which cities do your listings cover?,"The knowledge base covers Lahore (145), Karachi (147), Islamabad (139), Rawalpindi (144) - 575 listings in total."
+FAQ-02,coverage,Do you have rental listings?,No. All 575 listings are for sale; the knowledge base contains no rentals.
+FAQ-03,units,How are property sizes measured?,"Sizes are stored in square feet. In this dataset a marla is converted at 225 sq ft, a kanal at 4,500 sq ft (20 marla) and a square yard at 9 sq ft. These are approximations taken from the listing text - confirm exact area with the seller."
+FAQ-04,pricing,How are prices shown?,"Prices are asking prices in Pakistani rupees (PKR). 1 lac = 100,000 PKR and 1 crore = 10,000,000 PKR, so '2.50 crore' means 25,000,000 PKR."
+FAQ-05,pricing,Are the listed prices negotiable?,The listed figure is the asking price shown on the source portal. Whether it can be negotiated must be confirmed with the seller or agent; the listing data does not say.
+FAQ-06,developers,Which developers or societies appear in the listings?,"Named developers found in the listing text are DHA, Bahria Town, Park View and Paragon. The rest are tagged 'Private / Unknown'. The tag is parsed from text and can be wrong, so treat it as a hint, not a verified fact."
+FAQ-07,payment,Are installment plans available?,"16 of 575 listings are flagged as mentioning an installment or down-payment plan. The listing text rarely gives terms, so plan details must be confirmed with the seller."
+FAQ-08,freshness,How recent is the listing data?,The data was scraped from zameen.com on 2026-09-23. Listings may since have been sold or changed - confirm availability before acting.
+FAQ-09,features,"Do you have details on nearby schools, hospitals or amenities?","No structured data on nearby schools or hospitals is held. Feature mentions (for example pool, basement, furnished) are only what the listing title text says, so an absent feature may simply not have been mentioned."
+FAQ-10,scope,What information is not available?,"There are no rental prices, no developer ratings, no photos and no verified legal or ownership status. Only the fields in the listing (city, area, type, bedrooms, bathrooms, size, price and title text) are available."

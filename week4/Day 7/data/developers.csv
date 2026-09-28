@@ -1,0 +1,6 @@
+developer,listings,cities,avg_price_pkr,median_price_pkr,min_price_pkr,max_price_pkr,installment_listings,share_of_listings_pct,is_named_developer,note
+Private / Unknown,273,Islamabad|Karachi|Lahore|Rawalpindi,79520784,41500000,4800000,1100000000,5,47.5,False,developer parsed from area/description text by the scraper; not authoritative
+DHA,148,Islamabad|Karachi|Lahore,109296622,92200000,9000000,360000000,0,25.7,True,developer parsed from area/description text by the scraper; not authoritative
+Bahria Town,132,Islamabad|Karachi|Lahore|Rawalpindi,46841818,36750000,3600000,390000000,6,23.0,True,developer parsed from area/description text by the scraper; not authoritative
+Park View,17,Lahore,21147059,20000000,15000000,34000000,5,3.0,True,developer parsed from area/description text by the scraper; not authoritative
+Paragon,5,Lahore,32600000,26500000,21000000,48000000,0,0.9,True,developer parsed from area/description text by the scraper; not authoritative

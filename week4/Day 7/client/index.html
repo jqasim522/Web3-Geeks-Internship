@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>RealEstate Hub — Voice Agent</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { margin: 0 0 .25rem; }
+  .sub { color: #666; margin-bottom: 1rem; }
+  .row { display: flex; gap: .5rem; margin: .75rem 0; align-items: center; }
+  button { padding: .55rem 1rem; border: 0; border-radius: 6px; background: #0a7; color: #fff; cursor: pointer; font-size: 15px; }
+  button.secondary { background: #555; }
+  button:disabled { opacity: .45; cursor: default; }
+  #log { border: 1px solid #ddd; border-radius: 6px; padding: .75rem; height: 320px; overflow-y: auto; background: #fafafa; }
+  .me { color: #06c; }
+  .agent { color: #070; }
+  .sys { color: #888; font-style: italic; }
+  input[type=text] { flex: 1; padding: .5rem; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; }
+  #status { font-size: .85rem; color: #555; margin-left: auto; }
+  .pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #0a7; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+</style>
+</head>
+<body>
+<h1>RealEstate Hub — UrduLish Voice Agent</h1>
+<div class="sub">Speak in English (STT works best) — the agent replies in UrduLish.</div>
+<div class="row">
+  <button id="start">Start Call</button>
+  <button id="stop" class="secondary" disabled>Hang Up</button>
+  <button id="talk" disabled>🎙 Push to Talk</button>
+  <span id="status">disconnected</span>
+</div>
+<div class="row">
+  <input id="text" type="text" placeholder="…or type here and press Enter" />
+</div>
+<div id="log"></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const logEl = $("log"), statusEl = $("status");
+  const SR = 16000;
+
+  let ws = null;
+  let audioCtx = null;
+  let playbackCursor = 0;         // scheduled time cursor for continuous playback
+  let micStream = null;
+  let micProc = null;
+  let micSource = null;
+  let recording = false;
+
+  const log = (cls, text) => {
+    const d = document.createElement("div");
+    d.className = cls;
+    d.textContent = text;
+    logEl.appendChild(d);
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+  const setStatus = s => statusEl.textContent = s;
+
+  // ---------- connect ----------
+  const connect = () => new Promise((res, rej) => {
+    const proto = location.protocol === "https:" ? "wss" : "ws";
+    ws = new WebSocket(`${proto}://${location.host}/ws/voice`);
+    ws.binaryType = "arraybuffer";
+    ws.onopen = () => { setStatus("connected"); res(); };
+    ws.onclose = () => { setStatus("disconnected"); };
+    ws.onerror = e => { setStatus("error"); rej(e); };
+    ws.onmessage = onMessage;
+  });
+
+  // ---------- inbound ----------
+  const onMessage = (ev) => {
+    if (typeof ev.data === "string") {
+      try {
+        const m = JSON.parse(ev.data);
+        if (m.type === "transcript") log("me", "You (STT): " + m.text);
+        else if (m.type === "agent_text") log("agent", "Agent: " + m.text);
+        else if (m.type === "error") log("sys", "error: " + m.message);
+      } catch { log("sys", ev.data); }
+    } else {
+      playPcm(new Int16Array(ev.data));
+    }
+  };
+
+  // ---------- PCM playback ----------
+  const playPcm = (i16) => {
+    if (!audioCtx) return;
+    const f32 = new Float32Array(i16.length);
+    for (let i = 0; i < i16.length; i++) f32[i] = i16[i] / 32768;
+    const buf = audioCtx.createBuffer(1, f32.length, SR);
+    buf.copyToChannel(f32, 0);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    if (playbackCursor < now) playbackCursor = now + 0.03;
+    src.start(playbackCursor);
+    playbackCursor += buf.duration;
+  };
+
+  // ---------- mic ----------
+  const startMic = async () => {
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true }
+    });
+    micSource = audioCtx.createMediaStreamSource(micStream);
+    // Downsample to 16 kHz mono int16 via ScriptProcessor
+    // (AudioContext is created at 16 kHz below, so buffers are already correct)
+    micProc = audioCtx.createScriptProcessor(2048, 1, 1);
+    micProc.onaudioprocess = (e) => {
+      if (!recording || !ws || ws.readyState !== 1) return;
+      const f32 = e.inputBuffer.getChannelData(0);
+      const i16 = new Int16Array(f32.length);
+      for (let i = 0; i < f32.length; i++) {
+        const v = Math.max(-1, Math.min(1, f32[i]));
+        i16[i] = v < 0 ? v * 0x8000 : v * 0x7FFF;
+      }
+      ws.send(i16.buffer);
+    };
+    micSource.connect(micProc);
+    micProc.connect(audioCtx.destination);   // required in some browsers
+  };
+
+  // ---------- UI ----------
+  $("start").onclick = async () => {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SR });
+      if (audioCtx.state === "suspended") await audioCtx.resume();
+      await connect();
+      await startMic();
+      $("start").disabled = true;
+      $("stop").disabled = false;
+      $("talk").disabled = false;
+      log("sys", "ready — push-to-talk, or type below");
+    } catch (e) {
+      log("sys", "start failed: " + e.message);
+    }
+  };
+
+  $("stop").onclick = () => {
+    if (micProc) { micProc.disconnect(); micProc = null; }
+    if (micSource) { micSource.disconnect(); micSource = null; }
+    if (micStream) micStream.getTracks().forEach(t => t.stop());
+    if (ws) ws.close();
+    $("start").disabled = false;
+    $("stop").disabled = true;
+    $("talk").disabled = true;
+    recording = false;
+    log("sys", "call ended");
+  };
+
+  // Push to talk
+  const talk = $("talk");
+  const begin = (e) => {
+    e.preventDefault();
+    if (recording) return;
+    recording = true;
+    talk.textContent = "🎙 Recording…";
+    log("sys", "listening…");
+  };
+  const end = (e) => {
+    if (!recording) return;
+    recording = false;
+    talk.textContent = "🎙 Push to Talk";
+    if (ws && ws.readyState === 1) {
+      ws.send(JSON.stringify({ type: "end_of_utterance" }));
+      log("sys", "sent utterance");
+    }
+  };
+  talk.addEventListener("mousedown", begin);
+  talk.addEventListener("mouseup", end);
+  talk.addEventListener("mouseleave", end);
+  talk.addEventListener("touchstart", begin, {passive:false});
+  talk.addEventListener("touchend", end);
+
+  // Typed fallback
+  $("text").addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    const t = $("text").value.trim();
+    if (!t || !ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({ type: "text", content: t }));
+    log("me", "You: " + t);
+    $("text").value = "";
+  });
+})();
+</script>
+</body>
+</html>
