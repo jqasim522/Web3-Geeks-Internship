@@ -28,6 +28,25 @@ Google OAuth credential files are not persisted in the cloud image.
 
 ---
 
+## 🎬 Demo Video
+
+**Watch the full 10-minute walkthrough:** [YouTube (Unlisted)](https://youtu.be/JRPry7mpXq0)
+
+Runtime: 10 minutes.
+
+**Video covers:**
+1. Live voice interaction with the UrduLish agent
+2. Property search across 575 listings
+3. Multi-turn memory refinement
+4. FAQ grounding (RAG)
+5. Full booking flow with Human-in-the-Loop confirmation
+6. **Live Google Calendar event creation**
+7. **Live Gmail confirmation delivery**
+8. Reschedule + cancel with Calendar updates
+9. Guardrails testing (prompt injection, fake booking, internal data)
+10. Live database state changes (SQLite bookings lifecycle)
+11. Cloud deployment proof (Railway URL + `/health`)
+
 ## Table of Contents
 
 - [Overview](#overview)
